@@ -63,6 +63,7 @@ export default function App() {
     setLifes(0);
     setWon(false);
     setInputState('');
+    console.log('wordArray:', wordArray);
   }
 
   function verifyLoss(lifes) {
@@ -111,11 +112,18 @@ export default function App() {
 
   function verifyChar(char) {
     const verifyArray = [...tip];
+    let normalizeWord = [...word];
+    normalizeWord = normalizeWord.join('');
+    console.log(normalizeWord);
+    normalizeWord = normalizeWord.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+    normalizeWord = normalizeWord.split('');
+    console.log(verifyArray);
+    console.log(normalizeWord);
     if (!verifyLoss(lifes)) {
       console.log(char);
       console.log(word.includes(char));
-      if (word.includes(char)) {
-        word.map((charWord, index) => char === charWord ? verifyArray[index] = char : '');
+      if (normalizeWord.includes(char)) {
+        normalizeWord.map((charWord, index) => char === charWord ? verifyArray[index] = word[index] : '');
         console.log(verifyArray);
         setTip(verifyArray);
         setCharsPressed([...charsPressed, char]);
