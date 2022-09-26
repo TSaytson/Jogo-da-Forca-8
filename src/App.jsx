@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import GlobalStyle from './GlobalStyle'
 import styled from 'styled-components'
+import palavras from './palavras'
 
 export default function App() {
 
+  const newgameMessage = 'Clique em "Escolher Palavra" para iniciar um novo jogo';
+  const loss = 6;
   const gallows = [
     './src/assets/forca0.png',
     './src/assets/forca1.png',
@@ -14,46 +17,113 @@ export default function App() {
     './src/assets/forca6.png'
   ]
   const alphabet = [
-    'A', 'B', 'C', 'D', 'E', 'F',
-    'G', 'H', 'I', 'J', 'K', 'L',
-    'M', 'N', 'O', 'P', 'Q', 'R',
-    'S', 'T', 'U', 'V', 'W', 'X',
-    'Y','Z'
+    'a', 'b', 'c', 'd', 'e', 'f', 'g',
+    'h', 'i', 'j', 'k', 'l', 'm', 'n',
+    'o', 'p', 'q', 'r', 's', 't', 'u',
+    'v', 'w', 'x', 'y', 'z'
   ]
-  const [hangmanState, setHangmanState] = useState(gallows[0]);
+  const keyboard = {
+    able: {
+      color: '#4571a4',
+      backgroundColor: '#bce2ff'
+    },
+    disabled: {
+      color: '#5b6b7e',
+      backgroundColor: '#97abbb'
+    }
+  }
+  
+  const [gameState, setGameState] = useState(keyboard.disabled);
 
+  const [lifes, setLifes] = useState(0);
+  const [hangmanState, setHangmanState] = useState(gallows[lifes]);
+  
+  const [word, setWord] = useState([]);
+  const [tip, setTip] = useState([]);
+  const [charsPressed, setCharsPressed] = useState([]);
+
+  function startGame() {
+    const randomWord = palavras[Math.floor(Math.random() * 201)];
+    const wordArray = [];
+    const underlineArray = [];
+
+    for (let i = 0; i < randomWord.length; i++) {
+      wordArray.push(randomWord[i]);
+      underlineArray.push('_');
+    }
+    console.log(wordArray);
+    setWord(wordArray);
+    setGameState(keyboard.able);
+    setTip(underlineArray);
+    setHangmanState(gallows[0]);
+    setLifes(0);
+  }
+
+  function guess() {
+    alert('tentou adivinhar');
+  }
+
+  function verifyLoss(lifes) {
+    if (lifes === loss) {
+      console.log(lifes);
+      setGameState(keyboard.disabled);
+      setTip([...word]);
+      alert(newgameMessage);
+      return true;
+    }
+    return false;
+  }
+
+  function verifyChar(char) {
+    if (!verifyLoss(lifes)) {
+      const verifyArray = [...tip];
+      console.log(char);
+      console.log(word.includes(char));
+      if (gameState === keyboard.disabled || !word.length)
+        alert('Selecione uma palavra');
+      else {
+        if (word.includes(char)) {
+          console.log('entrou no if');
+          alert(`a palavra ${word} tem a letra ${char}`);
+          word.map((charWord, index) => char === charWord ? verifyArray[index] = char : '');
+          console.log(verifyArray);
+          setTip(verifyArray);
+        } else {
+          alert(`a palavra ${word} não tem a letra ${char}`);
+          setLifes(lifes + 1);
+          setHangmanState(gallows[lifes + 1]);
+        }
+      }
+      verifyLoss(lifes + 1);
+    }
+  }
   return (
     <>
       <GlobalStyle />
       <Container>
         <Hangman>
           <img src={hangmanState} />
-          <ShowWord>
-            <ChooseWord>Escolher Palavra</ChooseWord>
+          <ShowWord state={lifes}>
+            <ChooseWord onClick={startGame}>Escolher Palavra</ChooseWord>
             <ul>
-              <li>_</li>
-              <li>_</li>
-              <li>_</li>
-              <li>_</li>
-              <li>_</li>
-              <li>_</li>
-              <li>_</li>
-              <li>_</li>
-              <li>_</li>
-              <li>_</li>
-              <li>_</li>
+              {tip.map((char, index) => <li key={index}>{char}</li>)}
             </ul>
           </ShowWord>
         </Hangman>
-        <Keyboard>
+        <Keyboard state={gameState}>
           <ul>
-            {alphabet.map((char, index) => <li key={index}>{char}</li>)}
+            {alphabet.map((char, index) =>
+              <li
+                key={index}
+                onClick={() => verifyChar(char) }>
+                {char.toUpperCase()}
+              </li>)}
           </ul>
         </Keyboard>
-        <Guess>
+        <Guess state={gameState}>
           Já sei a palavra!
           <input></input>
-          <button>Chutar</button>
+          <button onClick={guess}>Chutar</button>
         </Guess>
       </Container>
     </>
@@ -73,7 +143,7 @@ const Hangman = styled.div`
   background-color: red;
   display: flex;
   justify-content: space-between;
-  width: 720px;
+  width: 760px;
   img{
     height: 480px;
     width: 400px;
@@ -82,11 +152,17 @@ const Hangman = styled.div`
 const ShowWord = styled.div`
   position: relative;
   background-color:aqua;
+  width: 360px;
   ul{
+    position: absolute;
+    right:0;
     margin-top:400px;
   }
   li{
+    color: ${(props) => props.state === 6 ? 'red': 'black'};
     display:inline;
+    font-family:'Arial';
+    font-weight: 600;
     margin-right:10px;
     font-size:40px;
   }
@@ -127,13 +203,22 @@ const Keyboard = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #4571a4;
+    color: ${(props) => (props.state.color)};
     font-weight: 600;
     font-size: larger;
     font-family: Arial, Helvetica, sans-serif;
     border-radius: 5px;
-    background-color: #bce2ff;
-    border: 1px solid #4571a4;
+    background-color: ${(props) => (props.state.backgroundColor)};
+    border: 1px solid ${(props) => (props.state.color)};
+    cursor: ${(props) => props.state.color === '#4571a4' ? 'pointer' : 'not-allowed'};
+    transition: all 0.5s;
+    &:hover{
+      background-color:${(props) =>
+    (props.state.color === '#4571a4' //&&
+      /*!keysPressed.includes(char)*/) ? '#cce8fd' : props.state.backgroundColor};
+      color:${(props) => props.state.color === '#4571a4' ? '#5c8bc1' : props.state.color};
+      border: 1px solid ${(props) => props.state.color === '#4571a4' ? '#70b2fe' : props.state.color};
+    }
   }
 `
 
@@ -147,14 +232,21 @@ const Guess = styled.div`
   button{
     margin-left: 10px;
     border-radius: 5px;
-    background-color: #bce2ff;
+    background-color: ${(props) => (props.state.backgroundColor)};
     font-weight: 600;
-    border: 1px solid #4571a4;
+    border: 1px solid ${(props) => (props.state.color)};
     height: 40px;
     width: 80px;
-    color: #4571a4;
+    color: ${(props) => (props.state.color)};
     font-size: medium;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
+    cursor: ${(props) => props.state.color === '#4571a4' ? 'pointer' : 'not-allowed'};
+    transition: all 0.5s;
+    &:hover{
+      background-color:${(props) => props.state.color === '#4571a4' ? '#cce8fd' : props.state.backgroundColor};
+      color:${(props) => props.state.color === '#4571a4' ? '#5c8bc1' : props.state.color};
+      border: 1px solid ${(props) => props.state.color === '#4571a4' ? '#70b2fe' : props.state.color};
+    }
     }
     input{
       box-shadow:inset 0.1px 0.1px 1px;
