@@ -44,6 +44,7 @@ export default function App() {
   const [tip, setTip] = useState([]);
   const [charsPressed, setCharsPressed] = useState([]);
   const [input, setInput] = useState('');
+  const [inputState, setInputState] = useState('disabled');
 
   function startGame() {
     const randomWord = palavras[Math.floor(Math.random() * 201)];
@@ -61,15 +62,17 @@ export default function App() {
     setHangmanState(gallows[0]);
     setLifes(0);
     setWon(false);
+    setInputState('');
   }
 
   function verifyLoss(lifes) {
-    if (lifes >= loss) {
+    if (lifes === loss) {
       console.log('vidas', lifes);
       setGameState(keyboard.disabled);
       setTip([...word]);
       setWord([]);
       setHangmanState(gallows[lifes]);
+      setInputState('disabled');
       alert('Você perdeu! ' + newgameMessage);
       return true;
     }
@@ -85,6 +88,7 @@ export default function App() {
       setGameState(keyboard.disabled);
       setTip([...word]);
       setWord([]);
+      setInputState('disabled');
       alert('Parabéns, você acertou! ' + newgameMessage);
       return (true);
     }
@@ -92,9 +96,7 @@ export default function App() {
   }
 
   function guess() {
-    console.log(input);
     const verifyArray = input.split(' ');
-    console.log(verifyArray);
     if (!verifyWin(lifes, verifyArray)) {
       setLifes(loss);
       verifyLoss(loss);
@@ -149,11 +151,12 @@ export default function App() {
               </li>)}
           </ul>
         </Keyboard>
-        <Guess state={gameState}>
+        <Guess state={gameState} inputState={inputState}>
           Já sei a palavra!
           <input type='text'
             onChange={(e) => setInput(e.target.value)}
-            value={input}></input>
+            value={input}
+            disabled={inputState}></input>
           <button onClick={() =>
             (checkGame()) ? guess() : alert(newgameMessage)}>Chutar</button>
         </Guess>
