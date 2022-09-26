@@ -43,6 +43,7 @@ export default function App() {
   const [word, setWord] = useState([]);
   const [tip, setTip] = useState([]);
   const [charsPressed, setCharsPressed] = useState([]);
+  const [input, setInput] = useState('');
 
   function startGame() {
     const randomWord = palavras[Math.floor(Math.random() * 201)];
@@ -53,7 +54,7 @@ export default function App() {
       wordArray.push(randomWord[i]);
       underlineArray.push('_');
     }
-    console.log(wordArray);
+    setInput('');
     setWord(wordArray);
     setGameState(keyboard.able);
     setTip(underlineArray);
@@ -62,16 +63,13 @@ export default function App() {
     setWon(false);
   }
 
-  function guess() {
-    alert('tentou adivinhar');
-  }
-
   function verifyLoss(lifes) {
-    if (lifes === loss) {
-      console.log(lifes);
+    if (lifes >= loss) {
+      console.log('vidas', lifes);
       setGameState(keyboard.disabled);
       setTip([...word]);
       setWord([]);
+      setHangmanState(gallows[lifes]);
       alert('Você perdeu! ' + newgameMessage);
       return true;
     }
@@ -80,23 +78,30 @@ export default function App() {
 
   function verifyWin(lifes, verifyArray) {
     const stringWord = word.join('');
-    console.log(stringWord);
     const stringVerifyArray = verifyArray.join('');
     console.log(stringVerifyArray);
     if ((lifes !== loss) && (stringVerifyArray === stringWord)) {
       setWon(true);
       setGameState(keyboard.disabled);
+      setTip([...word]);
       setWord([]);
       alert('Parabéns, você acertou! ' + newgameMessage);
+      return (true);
     }
-    console.log('não');
+    return false;
+  }
 
+  function guess() {
+    console.log(input);
+    const verifyArray = input.split(' ');
+    console.log(verifyArray);
+    if (!verifyWin(lifes, verifyArray)) {
+      setLifes(loss);
+      verifyLoss(loss);
+    }
   }
 
   function checkGame() {
-    console.log('vidas === loss:',lifes === loss);
-    console.log('!won', !won);
-    console.log('word.length:', word.length);
     if (lifes === loss || won || !word.length)
       return false;
     return true;
@@ -108,7 +113,6 @@ export default function App() {
       console.log(char);
       console.log(word.includes(char));
       if (word.includes(char)) {
-        console.log(`a palavra ${word} tem a letra ${char}`);
         word.map((charWord, index) => char === charWord ? verifyArray[index] = char : '');
         console.log(verifyArray);
         setTip(verifyArray);
@@ -139,15 +143,19 @@ export default function App() {
             {alphabet.map((char, index) =>
               <li
                 key={index}
-                onClick={() => (checkGame()) ? verifyChar(char) : alert(newgameMessage)}>
+                onClick={() =>
+                  (checkGame()) ? verifyChar(char) : alert(newgameMessage)}>
                 {char.toUpperCase()}
               </li>)}
           </ul>
         </Keyboard>
         <Guess state={gameState}>
           Já sei a palavra!
-          <input></input>
-          <button onClick={guess}>Chutar</button>
+          <input type='text'
+            onChange={(e) => setInput(e.target.value)}
+            value={input}></input>
+          <button onClick={() =>
+            (checkGame()) ? guess() : alert(newgameMessage)}>Chutar</button>
         </Guess>
       </Container>
     </>
