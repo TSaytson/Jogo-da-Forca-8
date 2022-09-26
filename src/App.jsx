@@ -63,6 +63,7 @@ export default function App() {
     setLifes(0);
     setWon(false);
     setInputState('');
+    setCharsPressed([]);
     console.log('wordArray:', wordArray);
   }
 
@@ -74,6 +75,7 @@ export default function App() {
       setWord([]);
       setHangmanState(gallows[lifes]);
       setInputState('disabled');
+      setCharsPressed([]);
       alert('Você perdeu! ' + newgameMessage);
       return true;
     }
@@ -90,6 +92,7 @@ export default function App() {
       setTip([...word]);
       setWord([]);
       setInputState('disabled');
+      setCharsPressed([]);
       alert('Parabéns, você acertou! ' + newgameMessage);
       return (true);
     }
@@ -111,6 +114,8 @@ export default function App() {
   }
 
   function verifyChar(char) {
+    if (charsPressed.includes(char) && charsPressed.length)
+      alert('tecla já pressionada');
     const verifyArray = [...tip];
     let normalizeWord = [...word];
     normalizeWord = normalizeWord.join('');
@@ -127,9 +132,10 @@ export default function App() {
         console.log(verifyArray);
         setTip(verifyArray);
         setCharsPressed([...charsPressed, char]);
-      } else {
-        setLifes(lifes + 1);
-        setHangmanState(gallows[lifes + 1]);
+      } else if (!charsPressed.includes(char)) {
+          setLifes(lifes + 1);
+          setHangmanState(gallows[lifes + 1]);
+          setCharsPressed([...charsPressed, char]);
       }
     }
     verifyLoss(lifes + 1);
@@ -151,7 +157,7 @@ export default function App() {
         <Keyboard state={gameState} disabledKeys={charsPressed}>
           <ul>
             {alphabet.map((char, index) =>
-              <li
+              <li 
                 key={index}
                 onClick={() =>
                   (checkGame()) ? verifyChar(char) : alert(newgameMessage)}>
