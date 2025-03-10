@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Swal from 'sweetalert2'
 import GlobalStyle from './GlobalStyle'
 import styled from 'styled-components'
 import forca0 from './assets/forca0.png'
@@ -13,7 +14,7 @@ import palavras from './palavras'
 
 export default function App() {
 
-  const newgameMessage = 'Clique em "Escolher Palavra" para iniciar um novo jogo';
+  const NEW_GAME_MESSAGE = 'Clique em "Escolher Palavra" para iniciar um novo jogo';
   const loss = 6;
 
   const gallows = [
@@ -72,19 +73,17 @@ export default function App() {
     setWon(false);
     setInputState('');
     setCharsPressed([]);
-    console.log('wordArray:', wordArray);
   }
 
   function verifyLoss(lifes) {
     if (lifes === loss) {
-      console.log('vidas', lifes);
       setGameState(keyboard.disabled);
       setTip([...word]);
       setWord([]);
       setHangmanState(gallows[lifes]);
       setInputState('disabled');
       setCharsPressed([]);
-      alert('Você perdeu! ' + newgameMessage);
+      Swal.fire('Você perdeu!', NEW_GAME_MESSAGE, 'error');
       return true;
     }
     return false;
@@ -93,7 +92,6 @@ export default function App() {
   function verifyWin(lifes, verifyArray) {
     const stringWord = word.join('');
     const stringVerifyArray = verifyArray.join('');
-    console.log(stringVerifyArray);
     if ((lifes !== loss) && (stringVerifyArray === stringWord)) {
       setWon(true);
       setGameState(keyboard.disabled);
@@ -101,7 +99,7 @@ export default function App() {
       setWord([]);
       setInputState('disabled');
       setCharsPressed([]);
-      alert('Parabéns, você acertou! ' + newgameMessage);
+      Swal.fire('Parabéns, você acertou!', NEW_GAME_MESSAGE, 'success');
       return (true);
     }
     return false;
@@ -123,27 +121,21 @@ export default function App() {
 
   function verifyChar(char) {
     if (charsPressed.includes(char) && charsPressed.length)
-      alert('tecla já pressionada');
+      Swal.fire({text: 'tecla já pressionada', icon: 'info'});
     const verifyArray = [...tip];
-    let normalizeWord = [...word];
-    normalizeWord = normalizeWord.join('');
-    console.log(normalizeWord);
-    normalizeWord = normalizeWord.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-    normalizeWord = normalizeWord.split('');
-    console.log(verifyArray);
-    console.log(normalizeWord);
+    let normalizedWord = [...word];
+    normalizedWord = normalizedWord.join('');
+    normalizedWord = normalizedWord.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+    normalizedWord = normalizedWord.split('');
     if (!verifyLoss(lifes)) {
-      console.log(char);
-      console.log(word.includes(char));
-      if (normalizeWord.includes(char)) {
-        normalizeWord.map((charWord, index) => char === charWord ? verifyArray[index] = word[index] : '');
-        console.log(verifyArray);
+      if (normalizedWord.includes(char)) {
+        normalizedWord.map((charWord, index) => char === charWord ? verifyArray[index] = word[index] : '');
         setTip(verifyArray);
         setCharsPressed([...charsPressed, char]);
       } else if (!charsPressed.includes(char)) {
-          setLifes(lifes + 1);
-          setHangmanState(gallows[lifes + 1]);
-          setCharsPressed([...charsPressed, char]);
+        setLifes(lifes + 1);
+        setHangmanState(gallows[lifes + 1]);
+        setCharsPressed([...charsPressed, char]);
       }
     }
     verifyLoss(lifes + 1);
@@ -168,19 +160,21 @@ export default function App() {
               <li 
                 key={index}
                 onClick={() =>
-                  (checkGame()) ? verifyChar(char) : alert(newgameMessage)}>
+                  (checkGame()) ? verifyChar(char) : Swal.fire(NEW_GAME_MESSAGE)}>
                 {char.toUpperCase()}
               </li>)}
           </ul>
         </Keyboard>
         <Guess state={gameState} inputState={inputState}>
-          Já sei a palavra!
-          <input type='text'
+          <label htmlFor="guess">Já sei a palavra!</label>
+          <input 
+            id='guess'
+            type='text'
             onChange={(e) => setInput(e.target.value)}
             value={input}
             disabled={inputState}></input>
           <button onClick={() =>
-            (checkGame()) ? guess() : alert(newgameMessage)}>Chutar</button>
+            (checkGame()) ? guess() : Swal.fire(NEW_GAME_MESSAGE)}>Chutar</button>
         </Guess>
       </Container>
     </>
@@ -192,26 +186,22 @@ const Container = styled.div`
   margin-top: 20px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: space-around;
+  justify-content: space-between;
 `
 
 const Hangman = styled.div`
   display: flex;
   justify-content: space-between;
-  width: 760px;
+  width: 200px;
   img{
-    height: 480px;
-    width: 400px;
+    height: 200px;
+    width: 200px;
   }
 `
 const ShowWord = styled.div`
-  position: relative;
   width: 360px;
   ul{
-    position: absolute;
-    right:0;
-    margin-top:400px;
+    margin-top: 200px;
   }
   li{
     color: ${(props) => props.lifes === 6 ? 'red' : props.state ? 'green' : 'black'};
@@ -278,12 +268,16 @@ const Keyboard = styled.div`
 `
 
 const Guess = styled.div`
+  margin-top: 100px;
   font-family:'Arial', sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 70%;
+  width: 95%;
   max-width: 900px;
+  label{
+    margin-left: 20px;
+  }
   button{
     margin-left: 10px;
     border-radius: 5px;
@@ -302,14 +296,13 @@ const Guess = styled.div`
       color:${(props) => props.state.color === '#4571a4' ? '#5c8bc1' : props.state.color};
       border: 1px solid ${(props) => props.state.color === '#4571a4' ? '#70b2fe' : props.state.color};
     }
-    }
-    input{
-      box-shadow:inset 0.1px 0.1px 1px;
-      border-radius: 3px;
-      border: 2px solid #707070;
-      height: 30px;
-      margin-left: 10px;
-      width: 50%;
-      max-width: 720px;
-    }
+  }
+  input{
+    box-shadow:inset 0.1px 0.1px 1px;
+    border-radius: 3px;
+    border: 2px solid #707070;
+    height: 30px;
+    width: 80%;
+    max-width: 720px;
+  }
 `
